@@ -1,0 +1,2 @@
+This is the repository of the blog article "How to create a (small) mind: a revolutionizing threat detection system with GraphRAG".
+In this notebook you'll find how to combine the Databricks Platform and the Mosaic AI framework components with the Neo4j Graph Database in order to create a cutting edge GraphRAG based chatbot.
