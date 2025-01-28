@@ -87,7 +87,7 @@ uc_registered_model_info = mlflow.register_model(model_uri=logged_chain_info.mod
 # Deploy the registered model and get the deployment info
 deployment_info = agents.deploy(model_name=UC_MODEL_NAME, model_version=uc_registered_model_info.version)
 
-print("\nWaiting for endpoint to deploy.  This can take 10 - 30 minutes.")  # Inform the user about the deployment wait time
+print("\nWaiting for endpoint to deploy. This can take 10 - 30 minutes.")  # Inform the user about the deployment wait time
 
 # Poll the endpoint status until it is ready
 while w.serving_endpoints.get(deployment_info.endpoint_name).state.config_update == EndpointStateConfigUpdate.IN_PROGRESS:
