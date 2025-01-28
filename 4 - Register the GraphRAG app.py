@@ -25,6 +25,7 @@ from databricks.sdk.service.serving import EndpointStateReady, EndpointStateConf
 from databricks.sdk import WorkspaceClient
 from mlflow.models.signature import ModelSignature
 from mlflow.models.rag_signatures import StringResponse, ChatCompletionRequest, ChatCompletionResponse
+from mlflow.models.resources import DatabricksServingEndpoint
 
 # COMMAND ----------
 
@@ -63,7 +64,13 @@ with mlflow.start_run(run_name=os.getenv('MLFLOW_RUN_NAME')):
             ],
         },
         code_paths=[".env"],
-        input_example={'query': "Can you show potiential attack paths in our network? Return the first five results"}
+        input_example={
+            'query': "Can you show potiential attack paths in our network? Return the first five results"
+        },
+        resources=[
+            DatabricksServingEndpoint(endpoint_name="databricks-meta-llama-3-70b-instruct"),
+            DatabricksServingEndpoint(endpoint_name="text2cypher-demo-16bit"),
+        ]
     )
 
 # COMMAND ----------
@@ -96,9 +103,7 @@ else:
 # Add the user-facing instructions to the Review App
 instructions_to_reviewer = """# GrapRAG bot based on Bloodhound dataset
 
-<div style="text-align:center">
-  <img src="https://guides.neo4j.com/sandbox/cybersecurity/img/bloodhound.png">
-</div>
+![BloodHound Logo](https://guides.neo4j.com/sandbox/cybersecurity/img/bloodhound.png)
 
 The source code of the demo is available on [GitHub](https://github.com/conker84/dbx-bloodhound-demo)
 
@@ -111,6 +116,6 @@ We have considered below sample objects for this use case.
 - Group Policy Object (GPO) - Virtual Collection of Policy Settings
 - OU (Organization Unit) - Sub division
 
-<img src="https://guides.neo4j.com/sandbox/cybersecurity/img/model.svg">
+![Graph Model](https://guides.neo4j.com/sandbox/cybersecurity/img/model.svg)
 """
 agents.set_review_instructions(UC_MODEL_NAME, instructions_to_reviewer)

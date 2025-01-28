@@ -2,11 +2,11 @@
 # MAGIC %md
 # MAGIC # Create the GraphRAG chatbot with Langchain and Neo4j
 # MAGIC
-# MAGIC You can test the behaviour of the chatbot with whatever LLM in this example we use OpenAI gpt-4. In order to use it just put your api key inside the property `OPEN_AI_API_KEY` placed in the `.env` file.
+# MAGIC You can test the behaviour of the chatbot with whatever LLM.
 
 # COMMAND ----------
 
-# MAGIC %pip install -q python-dotenv neo4j langchain-openai databricks-agents mlflow mlflow-skinny langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4
+# MAGIC %pip install -q python-dotenv neo4j langchain-openai databricks-agents databricks_langchain mlflow mlflow-skinny langchain==0.2.1 langchain_core==0.2.5 langchain_community==0.2.4
 
 # COMMAND ----------
 
@@ -51,7 +51,7 @@ neo4j_password = os.getenv('NEO4J_PASSWORD')
 
 # COMMAND ----------
 
-# from langchain_databricks import ChatDatabricks
+from langchain_community.chat_models import ChatDatabricks
 from langchain_openai import ChatOpenAI
 from langchain.chains import GraphCypherQAChain
 from langchain_community.graphs import Neo4jGraph
@@ -73,41 +73,84 @@ graph = Neo4jGraph(
 
 # COMMAND ----------
 
-CYPHER_GENERATION_PROMPT = PromptTemplate(
-    input_variables=["schema", "question"], template=os.getenv('SYSTEM_PROMPT')
-)
+# MAGIC %md
+# MAGIC # Define the LLMs
+# MAGIC
+# MAGIC We are speak prular as we use two different LLMs: 
+# MAGIC -  the one stored in the variable `qa_llm`, is for managing the Q&A part
+# MAGIC - the one stored in the variable `cypher_llm` is for managing the Text-2-Cypher conversion
+# MAGIC
+# MAGIC Each LLM has its own prompt as they're serving for different purposes.
 
 # COMMAND ----------
 
-llm = ChatOpenAI(
-    model="gpt-4",
-    temperature=0.2,
-    api_key=os.getenv('OPEN_AI_API_KEY'), # if you prefer to pass api key in directly instaed of using env vars
+# MAGIC %md
+# MAGIC ## Define the Q&A model
+
+# COMMAND ----------
+
+qa_llm = ChatDatabricks(
+    endpoint="databricks-meta-llama-3-70b-instruct",
+    temperature=0.1
 )
-# llm = ChatDatabricks(
-#     target_uri="databricks",
-#     temperature=0.1,
-#     # endpoint="databricks-llama-2-70b-chat",
-#     endpoint=os.getenv('LLM_MODEL_SERVING_ENDPOINT_NAME')
+qa_prompt = PromptTemplate(
+    input_variables=["context", "question"], template=os.getenv('QA_GENERATION_TEMPLATE')
+)
+print(qa_prompt)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Define the Text-2-Cypher model
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ### How to provision your Text-2-Cypher model
+# MAGIC
+# MAGIC Before moving forward, you can deploy your own Text-2-Cypher model by executing [this notebook]($./3.1 - Provisioned Throughput text2cypher serving example)
+
+# COMMAND ----------
+
+'''
+Now you can choose to use the `text2cypher-demo-16bit` model deployed in the notebook linked above or use whatever other LLM you want, as for instance in the commented code for using gpt-4.
+'''
+# cypher_llm = ChatDatabricks(
+#     endpoint="text2cypher-demo-16bit"
 # )
+cypher_llm = ChatOpenAI(
+    model="gpt-4o",
+    api_key=os.getenv('OPEN_AI_API_KEY'),
+    temperature=0.1
+)
+cypher_prompt = PromptTemplate(
+    input_variables=["schema", "question"], template=os.getenv('CYPHER_GENERATION_TEMPLATE')
+)
+print(cypher_prompt)
 
 # COMMAND ----------
 
 # Create a GraphCypherQAChain instance using a language model from Databricks and the Neo4j graph
 chain = GraphCypherQAChain.from_llm(
-    # Pass the language model
-    llm,
+    # Pass the language model for the Q&A part
+    qa_llm=qa_llm,
+    # Use the predefined Cypher generation prompt template for the Q&A part
+    qa_prompt=qa_prompt,
     # Pass the Neo4j graph instance
     graph=graph,
     # Enable verbose mode for detailed logging
-    verbose=False,
-    # Use the predefined Cypher generation prompt template
-    cypher_prompt=CYPHER_GENERATION_PROMPT,
+    verbose=True,
+    # Return intermediate steps for debugging
+    return_intermediate_steps=True,
+    # Pass the language model for the Text2Cypher part
+    cypher_llm=cypher_llm,
+    # Use the predefined Cypher generation prompt template for the Text2Cypher part
+    cypher_prompt=cypher_prompt,
     # Allow potentially dangerous requests
     allow_dangerous_requests=True,
     # Validate the generated Cypher queries
-    validate_cypher=True
-) |  RunnableLambda(lambda x: x["result"]) # The RunnableLambda step is used for properly extracting the result
+    validate_cypher=False
+) | RunnableLambda(lambda x: x["result"]) # The RunnableLambda step is used for properly extracting the result
 
 # COMMAND ----------
 
@@ -118,5 +161,4 @@ mlflow.models.set_model(model=chain)
 
 # if it's not ran from the Databricks model serving endpoint please run this for debug
 if not dot_env_path.exists():
-  response = chain.invoke("Can you show potiential attack paths in our network? Return the first five results")
-  print(response)
+  response = chain.invoke("Can you show potiential attack paths in our network to high value targets? Return the first five results")
