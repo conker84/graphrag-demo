@@ -2,7 +2,6 @@
 # MAGIC %md
 # MAGIC # Create the GraphRAG chatbot with Langchain and Neo4j
 # MAGIC
-# MAGIC You can test the behaviour of the chatbot with whatever LLM.
 
 # COMMAND ----------
 
@@ -61,6 +60,15 @@ import mlflow
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## The importance of MLflow
+# MAGIC
+# MAGIC MLflow plays a key role in tracking and debugging the GraphCypherQAChain workflow. It lets you monitor model versioning, performance metrics, and artifacts, making deployment seamless and transparent. With MLflow, you can easily trace and optimize the outputs of the LLMs within its interface.
+# MAGIC
+# MAGIC
+
+# COMMAND ----------
+
 mlflow.langchain.autolog()
 
 # COMMAND ----------
@@ -76,11 +84,14 @@ graph = Neo4jGraph(
 # MAGIC %md
 # MAGIC # Define the LLMs
 # MAGIC
-# MAGIC We are speak prular as we use two different LLMs: 
+# MAGIC We are speaking prular as we use two different LLMs: 
 # MAGIC -  the one stored in the variable `qa_llm`, is for managing the Q&A part
 # MAGIC - the one stored in the variable `cypher_llm` is for managing the Text-2-Cypher conversion
 # MAGIC
 # MAGIC Each LLM has its own prompt as they're serving for different purposes.
+# MAGIC
+# MAGIC
+# MAGIC
 
 # COMMAND ----------
 
@@ -130,6 +141,21 @@ print(cypher_prompt)
 
 # COMMAND ----------
 
+# MAGIC %md
+# MAGIC ## Create and Test GraphRAG Chain
+# MAGIC Now that we have defined our pretrained LLM and fine-tuned text2cypher model, and our data is loaded into the Neo4j graph database, we can then work on defining our agent. Details can be found in notebook.
+# MAGIC
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Naive Chain
+# MAGIC The Naive Chain approach involves using a pretrain LLM for both Cypher query generation and answer summarization, without the aid of advanced prompts or configurations. In this setup, GPT-4.0 is utilized as the primary model, where it takes in a user query, interprets it, generates the Cypher query, executes it against the Neo4j database, and finally summarizes the results. While this approach is straightforward, it may not fully leverage the flexibility and performance offered by using separate LLMs or more detailed prompts.
+# MAGIC
+# MAGIC An example code and results to use GPT-4.0 for this naive chain would look as follows:
+
+# COMMAND ----------
+
 # Create a GraphCypherQAChain instance using a language model from Databricks and the Neo4j graph
 chain = GraphCypherQAChain.from_llm(
     # Pass the language model for the Q&A part
@@ -156,6 +182,13 @@ chain = GraphCypherQAChain.from_llm(
 
 # Log the GraphCypherQAChain instance as an MLflow model
 mlflow.models.set_model(model=chain)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Log the chain
+# MAGIC
+# MAGIC Once the GraphRAG chain is logged, you can use chain.invoke() to pass a natural language query into the `GraphCypherQAChain`. The output includes the Cypher query and summarized response, enabling you to identify issues like query inaccuracies or misinterpretations. Testing the GraphRAG system in Databricks notebooks with MLflow tracing helps iteratively improve accuracy and reliability, ensuring it meets complex use cases like cybersecurity analysis or large-scale graph data retrieval.
 
 # COMMAND ----------
 

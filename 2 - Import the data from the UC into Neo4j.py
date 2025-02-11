@@ -1,16 +1,18 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # From Unity Catalog to Neo4j
+# MAGIC # Building a Knowledge Graph from Delta Tables
 # MAGIC
-# MAGIC In this notebook we'll see how to convert UC's Delta tables into node/relationships stored in Neo4j.
+# MAGIC Before building the agent, we need to set up the graph database. To implement the knowledge graphs (KG) for our graph database, it's essential to first consider the nature of the source data. The key question here is: "Is the data structured or unstructured?" 
+# MAGIC This post focuses largely on building a KG with structured data, however, if your data is unstructured, there’s generally much more work involved to build a KG. Generally, one can use LLMs to extract structured information from unstructured content, being thoughtful about how best to extract and represent entities, attributes, and relationships in that data. More advanced approaches involve multi-step methods, including [this approach from Microsoft Research](https://arxiv.org/abs/2404.16130), but this remains, as of early 2025, an area of active research. 
+# MAGIC For structured data, a useful starting point is to leverage the structural dependencies already present in your Lakehouse’s silver tables; these tables are typically defined with constraints like foreign keys. 
 # MAGIC
-# MAGIC For structured data, a useful starting point is to leverage the structural dependencies already present in your lakehouse's silver tables; these tables are typically defined with constraints like **foreign keys**. 
+# MAGIC For structured data, a useful starting point is to leverage the structural dependencies already present in your lakehouse's silver tables; these tables are typically defined with constraints like **foreign keys**.
 # MAGIC
-# MAGIC A simple example would be an Entity-Relationship (ER) diagram consisting of two tables, artist and song, and a join table, performs.
+# MAGIC A simple example would be the following E-R diagram of the BloodHound example
 # MAGIC
 # MAGIC <img src="images/er-model.png">
 # MAGIC
-# MAGIC The corresponding graph model would be relatively straightforward: two nodes (`Artist` and `Song`) connected by the relationship `PERFORMS`:
+# MAGIC which describes computers that are members of active directory groups and that can be translated in the following graph structure:
 # MAGIC
 # MAGIC <img src="images/er-to-graph-model.png">
 # MAGIC

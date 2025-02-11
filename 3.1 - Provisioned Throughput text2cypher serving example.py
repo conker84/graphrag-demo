@@ -1,6 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # Provisioned Throughput text2cypher serving example
+# MAGIC # Provisioned Throughput Text2Cypher serving example
+# MAGIC
+# MAGIC Pretrained LLMs power GraphRAG agents by handling Cypher query generation and natural language responses. They transform natural language into structured Cypher queries and interpret results into user-friendly answers. On Databricks, models like GPT-4.0o and Llama 3 can be integrated and served efficiently with [Mosaic AI Model Serving](https://docs.databricks.com/en/machine-learning/model-serving/index.html#mosaic-ai-model-serving), enabling scalable, reproducible deployments. Below are code snippets to set up these models, allowing easy experimentation and comparison to find the best solution for your application.
+# MAGIC
 # MAGIC
 # MAGIC Provisioned Throughput provides optimized inference for Foundation Models with performance guarantees for production workloads. Currently, Databricks supports optimizations for Llama3.x, Mosaic MPT, and Mistral class of models.
 # MAGIC
@@ -40,6 +43,21 @@
 # COMMAND ----------
 
 dbutils.library.restartPython()
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Text2Cypher model from HuggingFace
+# MAGIC General purpose LLMs often prove limited in certain specialty, so using a fine-tuned model for translating text to cypher leads to much better performance in practice. In this case, we’ll deploy a lightweight text2cypher model, fine-tuned based on the Llama 3 8B model. It is open-sourced on Hugging Face.
+# MAGIC
+# MAGIC In our code demo, the deployment of the text2cypher model is managed in the notebook “3.1 - Provisioned Throughput text2cypher serving example”, which:
+# MAGIC
+# MAGIC * Downloads the model from Hugging Face
+# MAGIC * Logs the model in Unity Catalog
+# MAGIC * Deploys a provisioned throughput model serving endpoint
+# MAGIC
+# MAGIC Once your endpoint is ready, you can query it by making an API request or testing it directly in the UI for seamless interaction. Deployment time may vary depending on the model's size and complexity. For instance, deploying the 8B text2cypher model was remarkably efficient, taking only 1 minute to complete. Further examples can be found [here](https://docs.databricks.com/en/machine-learning/foundation-model-apis/deploy-prov-throughput-foundation-model-apis.html#notebook-examples). 
+# MAGIC
 
 # COMMAND ----------
 

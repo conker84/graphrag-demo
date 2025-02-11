@@ -1,6 +1,15 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # Track, serve and monitor the GraphRAG app via the Mosaic AI framework
+# MAGIC
+# MAGIC **Mosaic AI Agent Framework** and **MLflow** provide tools to help you author enterprise-ready agents in Python. Databricks supports authoring agents using third-party agent authoring libraries like LangChain, LlamaIndex, or custom Python implementations.
+# MAGIC In this notebook we will will:
+# MAGIC
+# MAGIC * Log the GraphRAG model
+# MAGIC * Register it in Unity Catalog
+# MAGIC * Deploy it to a serving endpoint
+# MAGIC * Deploy the review app so you can test it and review the answers
+# MAGIC
 
 # COMMAND ----------
 
@@ -119,3 +128,15 @@ We have considered below sample objects for this use case.
 ![Graph Model](https://guides.neo4j.com/sandbox/cybersecurity/img/model.svg)
 """
 agents.set_review_instructions(UC_MODEL_NAME, instructions_to_reviewer)
+
+# COMMAND ----------
+
+# MAGIC %md
+# MAGIC ## Example of the review app
+# MAGIC The expected view from the review app should be like the following:
+# MAGIC
+# MAGIC <img src="images/review-app-intro.png">
+# MAGIC
+# MAGIC and
+# MAGIC
+# MAGIC <img src="images/review-app-example.png">
